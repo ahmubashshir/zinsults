@@ -21,6 +21,9 @@ fi
 if ! ((${+functions[__zinsult_command_not_found_handler]}));then
 	functions[__zinsult_command_not_found_handler]="${functions[command_not_found_handler]}"
 fi
+if (( ! ${+zinsults_load} )); then
+	typeset -ga zinsults_load
+fi
 
 function command_not_found_handler {
 	local -a msgs
