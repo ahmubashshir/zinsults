@@ -18,8 +18,8 @@ if ! ((${+functions[command_not_found_handler]})); then
 		printf 'zsh: command not found: %s\n' "$1" >&2
 	}
 fi
-if ! ((${+functions[__zinsult_command_not_found_handler]}));then
-	functions[__zinsult_command_not_found_handler]="${functions[command_not_found_handler]}"
+if ! ((${+functions[__zinsult_try_find_command]}));then
+	functions -c command_not_found_handler __zinsult_try_find_command
 fi
 if (( ! ${+zinsults_load} )); then
 	typeset -ga zinsults_load
@@ -32,15 +32,14 @@ function command_not_found_handler {
 	if ! ((${+CMD_NOT_FOUND_MSGS}));then
 		source "${__zinsult_msgfile}"
 	else
-		msgs=$( "${CMD_NOT_FOUND_MSGS[@]}" )
+		msgs=( "${CMD_NOT_FOUND_MSGS[@]}" )
 	fi
-	if ((${+CMD_NOT_FOUND_MSGS_APPEND}));then
-		messages+=( "${CMD_NOT_FOUND_MSGS_APPEND[@]}" )
+	if (($#msgs>0));then
+		RANDOM=$(od -vAn -N4 -tu < /dev/urandom)
+		builtin print -P -f 'zsh: %s\n' "$msgs[RANDOM % $#msgs + 1]"
+		unset msgs
 	fi
-	RANDOM=$(od -vAn -N4 -tu < /dev/urandom)
-	builtin print -P -f 'zsh: %s\n' "$msgs[RANDOM % $#msgs + 1]"
-	unset msgs
-	__zinsult_command_not_found_handler "$@"
+	__zinsult_try_find_command "$@"
 }
 
 # vim: ft=zsh ts=4 noet

@@ -225,8 +225,6 @@ fi
 
 ### User specified INSULTS ###
 if (( $+zinsults_custom && #zinsults_custom - ${(M)#zinsults_custom[@]:#} > 0)); then
-	msgs+=(
-		$zinsults_custom
-	)
+	msgs+=($zinsults_custom)
 fi
 # vim: ft=zsh ts=4 noet
