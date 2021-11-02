@@ -26,6 +26,10 @@ if (( ! ${+zinsults_load} )); then
 fi
 
 function command_not_found_handler {
+	if [[ ! -t 1 ]]; then
+		# Return if stdout is a pipe, not tty
+		return
+	fi
 	local -a msgs
 	local idx
 	setopt localoptions noksharrays
@@ -36,11 +40,7 @@ function command_not_found_handler {
 	fi
 	if (($#msgs>0));then
 		RANDOM=$(od -vAn -N4 -tu < /dev/urandom)
-		if [[ -w $TTY ]]; then
-			builtin print -P -f 'zsh: %s\n' "$msgs[RANDOM % $#msgs + 1]" >$TTY
-		else
-			builtin print -P -f 'zsh: %s\n' "$msgs[RANDOM % $#msgs + 1]"
-		fi
+		builtin print -P -f 'zsh: %s\n' "$msgs[RANDOM % $#msgs + 1]"
 		unset msgs
 	fi
 	__zinsult_try_find_command "$@"
