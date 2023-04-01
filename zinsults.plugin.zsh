@@ -59,14 +59,15 @@ function command_not_found_handler {
 	else msgs=( "${CMD_NOT_FOUND_MSGS[@]}" )
 	fi
 
-	if (($#msgs>0));then
-		RANDOM=$(od -vAn -N4 -tu < /dev/urandom)
-		builtin print -P -f 'zsh: %s\n' "$msgs[RANDOM % $#msgs + 1]"
-		unset msgs
-	fi
 	if ((${+functions[__zinsult_try_find_command]}))
 	then __zinsult_try_find_command "$@"
-	else builtin print -P -f 'zsh: command not found: %s\n' "$1"
+	else builtin print -Pnf '%szsh:%s command not found: %s%s\n' '%B%F{red}' '%F{cyan}' "$1" '%f%b'
+	fi
+
+	if (($#msgs>0));then
+		RANDOM=$(od -vAn -N4 -tu < /dev/urandom)
+		builtin print -Pnf '%szsh:%s %s%s\n' '%B%F{red}' '%F{cyan}' "$msgs[RANDOM % $#msgs + 1]" '%f%b'
+		unset msgs
 	fi
 }
 # vim: ft=zsh ts=4 noet
