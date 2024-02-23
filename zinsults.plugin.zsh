@@ -21,8 +21,7 @@ fi
 # in functions builtin for sticky shell emulation
 # Details: http://ix.io/3ZMR/irc - 2022-06-09 - irc://libera.chat/#zsh
 # Fixed in zsh-5.9-20-gd4955bc0f
-if ((${+functions[command_not_found_handler]}))
-then () {
+if () {
 	setopt localoptions extendedglob noksharrays
 	local -a match
 	local -i 10 major minor patch
@@ -36,14 +35,23 @@ then () {
 		version = ${match[1]}.${match[2]}
 	))
 	declare -r major minor patchrev version
-	if (("$1"))
-	then builtin functions -c "$2" "$3"
-	else builtin declare -g "functions[$3]=$functions[$2]"
-	fi
-} \
-		'version > 5.9 || version == 5.9 && (patch >= 20 || rev == 16#d4955bc)' \
+	(("$1"))
+	return
+} 'version > 5.9 || version == 5.9 && (patch >= 20 || rev == 16#d4955bc)'; then
+	function →zinsults/mv {
+		builtin functions -c "$1" "$2"
+	}
+else
+	function →zinsults/mv {
+		builtin declare -g "functions[$2]=$functions[$1]"
+	}
+fi
+
+if ((${+functions[command_not_found_handler]}))
+then
+	→zinsults/mv \
 		command_not_found_handler \
-		__zinsult_try_find_command
+		→zinsults/cnf/old
 fi
 
 function command_not_found_handler {
@@ -59,15 +67,26 @@ function command_not_found_handler {
 	else msgs=( "${CMD_NOT_FOUND_MSGS[@]}" )
 	fi
 
-	if ((${+functions[__zinsult_try_find_command]}))
-	then __zinsult_try_find_command "$@"
-	else builtin print -Pnf '%szsh:%s command not found: %s%s\n' '%B%F{red}' '%F{cyan}' "$1" '%f%b'
-	fi
-
 	if (($#msgs>0));then
 		RANDOM=$(od -vAn -N4 -tu < /dev/urandom)
 		builtin print -Pnf '%szsh:%s %s%s\n' '%B%F{red}' '%F{cyan}' "$msgs[RANDOM % $#msgs + 1]" '%f%b'
 		unset msgs
 	fi
+
+	if ((${+functions[→zinsults/cnf]}))
+	then
+		→zinsults/mv →zinsults/cnf \
+			command_not_found_handler
+		command_not_found_handler "$@"
+	else
+		builtin print -Pnf \
+			'%szsh:%s command not found: %s%s\n' \
+			'%B%F{red}' '%F{cyan}' "$1" '%f%b'
+	fi
 }
+
+((${+functions[→zinsults/cnf/old]})) || return
+[[ $functions[command_not_found_handler] == $functions[→zinsults/cnf/old] ]] \
+|| →zinsults/mv →zinsults/cnf/old →zinsults/cnf
+builtin unfunction →zinsults/cnf/old
 # vim: ft=zsh ts=4 noet
